@@ -18,6 +18,9 @@
   <meta name="apple-mobile-web-app-title" content="상생대리운전" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 
+  <!-- 카카오 지도 API 키 (정확한 도로명 주소용) -->
+  <script src="config.js"></script>
+
   <!-- 공유(Open Graph) -->
   <meta property="og:title" content="상생대리운전" />
   <meta property="og:description" content="대리기사·탁송기사·법인기사 24시간 호출 ☎ 1866-1240" />
@@ -551,8 +554,43 @@
       setTimeout(function () { locMap.invalidateSize(); }, 120);
     }
 
-    // 무료 역지오코딩(키 불필요)으로 대략적인 한글 주소 표시
-    function reverseGeocode(lat, lng) {
+    // 카카오 지도 SDK 지연 로드 (services 라이브러리 = 주소 변환)
+    var kakaoReady = false;
+    function loadKakao() {
+      return new Promise(function (resolve) {
+        if (!window.KAKAO_JS_KEY) return resolve(false);     // 키 없으면 폴백
+        if (kakaoReady) return resolve(true);
+        var s = document.createElement('script');
+        s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + window.KAKAO_JS_KEY + '&libraries=services&autoload=false';
+        s.onload = function () {
+          try { kakao.maps.load(function () { kakaoReady = true; resolve(true); }); }
+          catch (e) { resolve(false); }
+        };
+        s.onerror = function () { resolve(false); };
+        document.head.appendChild(s);
+      });
+    }
+
+    // 1순위: 카카오 정확한 도로명 주소
+    function kakaoAddress(lat, lng) {
+      var geocoder = new kakao.maps.services.Geocoder();
+      geocoder.coord2Address(lng, lat, function (result, status) {
+        if (status === kakao.maps.services.Status.OK && result[0]) {
+          var road = result[0].road_address;   // 도로명
+          var jibun = result[0].address;        // 지번
+          var addr = (road && road.address_name) || (jibun && jibun.address_name) || '';
+          curAddr = addr;
+          var label = addr ? ('📍 ' + addr) : '📍 현재 위치';
+          if (road && road.building_name) label += ' (' + road.building_name + ')';
+          document.getElementById('locAddr').textContent = label;
+        } else {
+          bigDataFallback(lat, lng);
+        }
+      });
+    }
+
+    // 폴백: 무료 역지오코딩(키 불필요) — 대략적인 한글 주소
+    function bigDataFallback(lat, lng) {
       fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lng + '&localityLanguage=ko')
         .then(function (r) { return r.json(); })
         .then(function (d) {
@@ -561,6 +599,14 @@
           document.getElementById('locAddr').textContent = curAddr ? ('📍 ' + curAddr + ' 부근') : '📍 현재 위치';
         })
         .catch(function () { document.getElementById('locAddr').textContent = '📍 현재 위치'; });
+    }
+
+    // 주소 변환 진입점: 카카오 우선, 실패 시 폴백
+    function reverseGeocode(lat, lng) {
+      loadKakao().then(function (ok) {
+        if (ok && kakaoReady) kakaoAddress(lat, lng);
+        else bigDataFallback(lat, lng);
+      });
     }
 
     function onPos(pos) {
