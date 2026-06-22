@@ -1,0 +1,40 @@
+{
+  "name": "상생대리운전",
+  "short_name": "상생대리",
+  "description": "상생대리운전 - 대리기사·탁송기사·법인기사 24시간 호출. 전화 1866-1240",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b3fb0",
+  "theme_color": "#1e6fff",
+  "lang": "ko",
+  "dir": "ltr",
+  "categories": ["travel", "navigation", "business"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "대리기사 호출",
+      "short_name": "대리기사",
+      "url": "./index.html?call=driver",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "탁송기사 호출",
+      "short_name": "탁송기사",
+      "url": "./index.html?call=delivery",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "법인기사 호출",
+      "short_name": "법인기사",
+      "url": "./index.html?call=corp",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
