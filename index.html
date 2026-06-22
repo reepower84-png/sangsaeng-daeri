@@ -589,7 +589,35 @@
       });
     }
 
-    // 폴백: 무료 역지오코딩(키 불필요) — 대략적인 한글 주소
+    // 키 불필요 정확 주소: OpenStreetMap(Nominatim) — 도로명/동 단위
+    function nominatimAddress(lat, lng) {
+      fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng + '&accept-language=ko&zoom=18&addressdetails=1')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var a = d.address || {};
+          var parts = [
+            a.province || a.state || a.region,
+            a.city || a.county || a.town || a.village,
+            a.city_district || a.borough,
+            a.suburb || a.quarter || a.neighbourhood,
+            a.road,
+            a.house_number
+          ].filter(function (v) { return v; });
+          var seen = {}, uniq = [];
+          parts.forEach(function (p) { if (!seen[p]) { seen[p] = 1; uniq.push(p); } });
+          var addr = uniq.join(' ');
+          if (!addr && d.display_name) addr = d.display_name;
+          if (addr) {
+            curAddr = addr;
+            document.getElementById('locAddr').textContent = '📍 ' + addr;
+          } else {
+            bigDataFallback(lat, lng);
+          }
+        })
+        .catch(function () { bigDataFallback(lat, lng); });
+    }
+
+    // 최종 폴백: 무료 역지오코딩 — 대략적인 한글 주소(시·구 단위)
     function bigDataFallback(lat, lng) {
       fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lng + '&localityLanguage=ko')
         .then(function (r) { return r.json(); })
@@ -604,8 +632,8 @@
     // 주소 변환 진입점: 카카오 우선, 실패 시 폴백
     function reverseGeocode(lat, lng) {
       loadKakao().then(function (ok) {
-        if (ok && kakaoReady) kakaoAddress(lat, lng);
-        else bigDataFallback(lat, lng);
+        if (ok && kakaoReady) kakaoAddress(lat, lng);   // 키 있으면 카카오(최정확)
+        else nominatimAddress(lat, lng);                // 키 없으면 OSM 도로명
       });
     }
 
