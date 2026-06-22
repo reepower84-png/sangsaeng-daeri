@@ -262,7 +262,7 @@
       margin-top: 12px; background: #fff; border-radius: 18px; padding: 12px;
       box-shadow: var(--shadow); border: 1px solid #eaf0fb;
     }
-    .map { height: 230px; width: 100%; border-radius: 14px; overflow: hidden; background: #e9eef7; z-index: 1; }
+    .map { height: 230px; width: 100%; border-radius: 16px; overflow: hidden; background: #e9eef7; z-index: 1; margin-bottom: 12px; box-shadow: var(--shadow); border: 1px solid #eaf0fb; }
     .loc-addr { font-size: 15px; font-weight: 800; margin: 12px 4px 2px; }
     .loc-coords { font-size: 12px; color: var(--muted); margin: 0 4px 12px; }
     .loc-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -317,6 +317,26 @@
       </div>
     </section>
 
+    <!-- 현재 위치 확인 -->
+    <h2 class="section-title">내 위치 확인</h2>
+    <section class="loc">
+      <div id="map" class="map"></div>
+      <button class="loc-btn" id="locBtn" type="button">📍 현재 위치 확인하기</button>
+      <p class="loc-hint" id="locHint">버튼을 누르면 휴대폰 GPS로 현재 위치를 지도에 표시합니다.</p>
+
+      <div class="loc-result" id="locResult" hidden>
+        <div class="loc-addr" id="locAddr">위치 확인 중…</div>
+        <div class="loc-coords" id="locCoords"></div>
+        <div class="loc-actions">
+          <a class="la" id="laKakao" target="_blank" rel="noopener">카카오맵</a>
+          <a class="la" id="laNaver" target="_blank" rel="noopener">네이버지도</a>
+          <a class="la" id="laGoogle" target="_blank" rel="noopener">구글지도</a>
+          <button class="la" id="laShare" type="button">위치 공유</button>
+        </div>
+        <a class="loc-call" href="tel:1866-1240">📞 이 위치로 대리 부르기 · 1866-1240</a>
+      </div>
+    </section>
+
     <!-- 호출 버튼 3종 -->
     <section class="calls">
       <a class="call-card driver" href="tel:1866-1240" data-call="driver">
@@ -345,26 +365,6 @@
         </div>
         <div class="go">호출 ›</div>
       </a>
-    </section>
-
-    <!-- 현재 위치 확인 -->
-    <h2 class="section-title">내 위치 확인</h2>
-    <section class="loc">
-      <button class="loc-btn" id="locBtn" type="button">📍 현재 위치 확인하기</button>
-      <p class="loc-hint" id="locHint">버튼을 누르면 휴대폰 GPS로 현재 위치를 지도에 표시합니다.</p>
-
-      <div class="loc-result" id="locResult" hidden>
-        <div id="map" class="map"></div>
-        <div class="loc-addr" id="locAddr">위치 확인 중…</div>
-        <div class="loc-coords" id="locCoords"></div>
-        <div class="loc-actions">
-          <a class="la" id="laKakao" target="_blank" rel="noopener">카카오맵</a>
-          <a class="la" id="laNaver" target="_blank" rel="noopener">네이버지도</a>
-          <a class="la" id="laGoogle" target="_blank" rel="noopener">구글지도</a>
-          <button class="la" id="laShare" type="button">위치 공유</button>
-        </div>
-        <a class="loc-call" href="tel:1866-1240">📞 이 위치로 대리 부르기 · 1866-1240</a>
-      </div>
     </section>
 
     <!-- 특징 -->
@@ -689,6 +689,20 @@
         catch (e) { toast(gmap); }
       }
     });
+
+    // 위치 확인 전에도 기본 지도(서울 중심)를 미리 표시
+    function initDefaultMap() {
+      loadLeaflet().then(function () {
+        if (!locMap) {
+          locMap = L.map('map', { zoomControl: true }).setView([37.5665, 126.9780], 11);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '© OpenStreetMap'
+          }).addTo(locMap);
+        }
+        setTimeout(function () { locMap.invalidateSize(); }, 150);
+      }).catch(function () {});
+    }
+    initDefaultMap();
 
     /* ---- 서비스워커 등록 ---- */
     if ('serviceWorker' in navigator) {
